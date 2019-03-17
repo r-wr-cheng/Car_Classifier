@@ -188,10 +188,11 @@ if __name__ == '__main__':
     car_classifier = tf.estimator.Estimator(
       model_fn=cnn_model_fn, model_dir=args.model_dir, config = config)
     
+    
     train_spec = tf.estimator.TrainSpec(
          input_fn=lambda:image_processor_train_input_fn(
              training_image_processor, X_train, y_train, 2), 
-         max_steps=100)
+         max_steps=1000)
     
     eval_spec = tf.estimator.EvalSpec(
         input_fn=lambda:image_processor_eval_input_fn(X_train, y_train, 32))
