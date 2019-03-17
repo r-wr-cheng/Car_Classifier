@@ -1,4 +1,9 @@
-def estimator_fn(features, labels, mode):
+import tensorflow as tf
+import numpy as np
+import argparse
+import os
+
+def cnn_model_fn(features, labels, mode):
     """Model function for CNN."""
     
     #Define model architecture
@@ -131,28 +136,79 @@ def image_processor_train_input_fn(image_processor, X_train, y_train, batch_size
                                                   y_train, batch_size, shuffle = True), 
         output_types = (np.float32, np.int32))
     
-    dataset = dataset.shuffle(512).repeat()
+    dataset = dataset.shuffle(30).repeat()
     
     return dataset
 
-#Shearing, no zooming
-training_image_processor = tf.keras.preprocessing.image.ImageDataGenerator(
-    rescale= 1./255,
-    width_shift_range = 0.1,
-    height_shift_range = 0.1,
-    shear_range=15,
-    horizontal_flip=True,
-    data_format = 'channels_last',
-)
-
-def image_processor_eval_input_fn(image_processor, X_test, y_test, batch_size):
+def image_processor_eval_input_fn(X_test, y_test, batch_size):
     
-    dataset = tf.data.Dataset.from_tensor_slices((X_test.astype('float32'), 
+    dataset = tf.data.Dataset.from_tensor_slices((X_test.astype('float32') / 255.0, 
                                                   y_test.astype('int32')))
         
     return dataset.batch(batch_size)
 
-testing_image_processor = tf.keras.preprocessing.image.ImageDataGenerator(
-    rescale=1./255,
-    data_format = 'channels_last'
-)
+if __name__ == '__main__':
+    tf.logging.set_verbosity(tf.logging.INFO)
+    parser = argparse.ArgumentParser()
+    
+    parser.add_argument('--model_dir', type=str)
+    parser.add_argument('--train', type=str, default=os.environ.get('SM_CHANNEL_TRAIN'))
+    parser.add_argument('--test', type=str, default=os.environ.get('SM_CHANNEL_TEST'))
+    
+    args, _ = parser.parse_known_args()
+    
+    data_train = np.genfromtxt('{}/train_head.csv'.format(args.train), delimiter = ',')
+    
+    X_train = data_train[:, :-2]
+    y_train = data_train[:, -2:]
+    
+#     data_test = np.genfromtxt('{}/test.csv'.format(args.test), delimiter = ',')
+    
+#     X_train = data_train[:, :-2]
+#     y_train = data_train[:, -2:]
+    
+    print(X_train.shape)
+    print(y_train.shape)
+    
+    #Shearing, no zooming
+    training_image_processor = tf.keras.preprocessing.image.ImageDataGenerator(
+        rescale= 1./255,
+        width_shift_range = 0.1,
+        height_shift_range = 0.1,
+        shear_range=15,
+        horizontal_flip=True,
+        data_format = 'channels_last',
+    )
+    
+    config = tf.estimator.RunConfig(log_step_count_steps = 10,
+                                    save_summary_steps = 10
+                                   )
+
+    # Create the Estimator
+    car_classifier = tf.estimator.Estimator(
+      model_fn=cnn_model_fn, model_dir=args.model_dir, config = config)
+    
+    train_spec = tf.estimator.TrainSpec(
+         input_fn=lambda:image_processor_train_input_fn(
+             training_image_processor, X_train, y_train, 2), 
+         max_steps=100)
+    
+    eval_spec = tf.estimator.EvalSpec(
+        input_fn=lambda:image_processor_eval_input_fn(X_train, y_train, 32))
+    
+    tf.estimator.train_and_evaluate(car_classifier, train_spec, eval_spec)
+    
+#     car_classifier.train(
+#       input_fn=lambda:image_processor_train_input_fn(training_image_processor, X_train, y_train, 128),
+#       steps=100
+#     )
+    
+#     print('training error')
+#     eval_results = car_classifier.evaluate(
+#         input_fn=lambda:image_processor_eval_input_fn(testing_image_processor, X_train, y_train, 32))
+#     print(eval_results)
+
+#     print('testing error')
+#     eval_results = car_classifier.evaluate(
+#         input_fn=lambda:image_processor_eval_input_fn(testing_image_processor, X_test, y_test, 32))
+#     print(eval_results)
