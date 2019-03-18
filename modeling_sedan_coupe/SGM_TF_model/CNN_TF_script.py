@@ -157,12 +157,12 @@ if __name__ == '__main__':
     
     args, _ = parser.parse_known_args()
     
-    data_train = np.genfromtxt('{}/train_head.csv'.format(args.train), delimiter = ',')
+    data_train = np.loadtxt('{}/train_head.csv'.format(args.train), delimiter = ',')
     
     X_train = data_train[:, :-2]
     y_train = data_train[:, -2:]
     
-#     data_test = np.genfromtxt('{}/test.csv'.format(args.test), delimiter = ',')
+#     data_test = np.loadtxt('{}/test.csv'.format(args.test), delimiter = ',')
     
 #     X_train = data_train[:, :-2]
 #     y_train = data_train[:, -2:]
