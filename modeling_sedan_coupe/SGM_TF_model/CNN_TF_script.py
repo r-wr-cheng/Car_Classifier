@@ -10,6 +10,9 @@ def cnn_model_fn(features, labels, mode):
     
     # Input Layer
     # Reshape X to 4-D tensor: [batch_size, width, height, channels]
+    if type(features) is dict:
+        features = features['input']
+        
     input_layer = tf.reshape(features, [-1, 200, 200, 1])
 
     # Convolutional Layer #1
@@ -147,6 +150,14 @@ def image_processor_eval_input_fn(X_test, y_test, batch_size):
         
     return dataset.batch(batch_size)
 
+def serving_input_receiver_fn():
+    inputs = {
+        'input' : tf.placeholder(tf.float32, [None, 200, 200, 1]),
+    }
+    
+    inputs['input'] = tf.divide(inputs['input'], 255.0)
+    return tf.estimator.export.ServingInputReceiver(inputs, inputs)
+
 if __name__ == '__main__':
     tf.logging.set_verbosity(tf.logging.INFO)
     parser = argparse.ArgumentParser()
@@ -208,6 +219,9 @@ if __name__ == '__main__':
     )
     
     tf.estimator.train_and_evaluate(car_classifier, train_spec, eval_spec)
+    
+    car_classifier.export_savedmodel(args.local_model_dir, serving_input_receiver_fn,
+                            strip_default_attrs=True)
     
 #     car_classifier.train(
 #       input_fn=lambda:image_processor_train_input_fn(training_image_processor, X_train, y_train, 128),
