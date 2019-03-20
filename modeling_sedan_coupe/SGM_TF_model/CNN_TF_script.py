@@ -151,7 +151,15 @@ if __name__ == '__main__':
     tf.logging.set_verbosity(tf.logging.INFO)
     parser = argparse.ArgumentParser()
     
+    #outter S3 bucket where all the outputs are stored
     parser.add_argument('--model_dir', type=str)
+    
+    #local dir for model artifacts
+    parser.add_argument('--local_model_dir', type=str, default=os.environ.get('SM_MODEL_DIR'))
+    #local dir for tensorboard stuff
+    parser.add_argument('--local_tb_dir', type=str, default=os.environ.get('SM_OUTPUT_DATA_DIR'))
+    
+    #input data paths
     parser.add_argument('--train', type=str, default=os.environ.get('SM_CHANNEL_TRAIN'))
     parser.add_argument('--test', type=str, default=os.environ.get('SM_CHANNEL_TEST'))
     
@@ -194,8 +202,10 @@ if __name__ == '__main__':
              training_image_processor, X_train, y_train, 2), 
          max_steps=1000)
     
+    
     eval_spec = tf.estimator.EvalSpec(
-        input_fn=lambda:image_processor_eval_input_fn(X_train, y_train, 32))
+        input_fn=lambda:image_processor_eval_input_fn(X_train, y_train, 32)
+    )
     
     tf.estimator.train_and_evaluate(car_classifier, train_spec, eval_spec)
     
