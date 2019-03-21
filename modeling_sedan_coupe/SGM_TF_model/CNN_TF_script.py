@@ -181,16 +181,10 @@ if __name__ == '__main__':
     X_train = data_train[:, :-2]
     y_train = data_train[:, -2:]
     
-    print(X_train.shape)
-    print(y_train.shape)
-    
     data_test = np.loadtxt('{}/test.csv'.format(args.test), delimiter = ',')
     
     X_test = data_test[:, :-2]
     y_test = data_test[:, -2:]
-    
-    print(X_test.shape)
-    print(y_test.shape)
     
     #Shearing, no zooming
     training_image_processor = tf.keras.preprocessing.image.ImageDataGenerator(
