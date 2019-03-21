@@ -176,18 +176,21 @@ if __name__ == '__main__':
     
     args, _ = parser.parse_known_args()
     
-    data_train = np.loadtxt('{}/train_head.csv'.format(args.train), delimiter = ',')
+    data_train = np.loadtxt('{}/train.csv'.format(args.train), delimiter = ',')
     
     X_train = data_train[:, :-2]
     y_train = data_train[:, -2:]
     
-#     data_test = np.loadtxt('{}/test.csv'.format(args.test), delimiter = ',')
-    
-#     X_train = data_train[:, :-2]
-#     y_train = data_train[:, -2:]
-    
     print(X_train.shape)
     print(y_train.shape)
+    
+    data_test = np.loadtxt('{}/test.csv'.format(args.test), delimiter = ',')
+    
+    X_test = data_test[:, :-2]
+    y_test = data_test[:, -2:]
+    
+    print(X_test.shape)
+    print(y_test.shape)
     
     #Shearing, no zooming
     training_image_processor = tf.keras.preprocessing.image.ImageDataGenerator(
@@ -210,12 +213,12 @@ if __name__ == '__main__':
     
     train_spec = tf.estimator.TrainSpec(
          input_fn=lambda:image_processor_train_input_fn(
-             training_image_processor, X_train, y_train, 2), 
+             training_image_processor, X_train, y_train, 64), 
          max_steps=1000)
     
     
     eval_spec = tf.estimator.EvalSpec(
-        input_fn=lambda:image_processor_eval_input_fn(X_train, y_train, 32)
+        input_fn=lambda:image_processor_eval_input_fn(X_test, y_test, 32)
     )
     
     tf.estimator.train_and_evaluate(car_classifier, train_spec, eval_spec)
