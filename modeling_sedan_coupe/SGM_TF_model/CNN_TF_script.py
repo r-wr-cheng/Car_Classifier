@@ -106,7 +106,7 @@ def cnn_model_fn(features, labels, mode):
             {"loss" : loss,
             },
             every_n_iter=10)
-        optimizer = tf.train.AdamOptimizer(learning_rate=0.0005)
+        optimizer = tf.train.AdamOptimizer(learning_rate=0.001)
         train_op = optimizer.minimize(
             loss=loss,
             global_step=tf.train.get_global_step())
@@ -139,7 +139,7 @@ def image_processor_train_input_fn(image_processor, X_train, y_train, batch_size
                                                   y_train, batch_size, shuffle = True), 
         output_types = (np.float32, np.int32))
     
-    dataset = dataset.shuffle(30).repeat()
+    dataset = dataset.shuffle(512).repeat()
     
     return dataset
 
@@ -208,29 +208,15 @@ if __name__ == '__main__':
     train_spec = tf.estimator.TrainSpec(
          input_fn=lambda:image_processor_train_input_fn(
              training_image_processor, X_train, y_train, 64), 
-         max_steps=1000)
+         max_steps=6000)
     
     
     eval_spec = tf.estimator.EvalSpec(
-        input_fn=lambda:image_processor_eval_input_fn(X_test, y_test, 32)
+        input_fn=lambda:image_processor_eval_input_fn(X_test, y_test, 32),
+        steps = None
     )
     
     tf.estimator.train_and_evaluate(car_classifier, train_spec, eval_spec)
     
     car_classifier.export_savedmodel(args.local_model_dir, serving_input_receiver_fn,
                             strip_default_attrs=True)
-    
-#     car_classifier.train(
-#       input_fn=lambda:image_processor_train_input_fn(training_image_processor, X_train, y_train, 128),
-#       steps=100
-#     )
-    
-#     print('training error')
-#     eval_results = car_classifier.evaluate(
-#         input_fn=lambda:image_processor_eval_input_fn(testing_image_processor, X_train, y_train, 32))
-#     print(eval_results)
-
-#     print('testing error')
-#     eval_results = car_classifier.evaluate(
-#         input_fn=lambda:image_processor_eval_input_fn(testing_image_processor, X_test, y_test, 32))
-#     print(eval_results)
