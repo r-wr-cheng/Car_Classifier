@@ -106,7 +106,7 @@ def cnn_model_fn(features, labels, mode):
             {"loss" : loss,
             },
             every_n_iter=10)
-        optimizer = tf.train.AdamOptimizer(learning_rate=0.001)
+        optimizer = tf.train.AdamOptimizer(learning_rate=0.0005)
         train_op = optimizer.minimize(
             loss=loss,
             global_step=tf.train.get_global_step())
@@ -208,7 +208,7 @@ if __name__ == '__main__':
     train_spec = tf.estimator.TrainSpec(
          input_fn=lambda:image_processor_train_input_fn(
              training_image_processor, X_train, y_train, 64), 
-         max_steps=6000)
+         max_steps=10000)
     
     
     eval_spec = tf.estimator.EvalSpec(
