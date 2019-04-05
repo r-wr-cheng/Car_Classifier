@@ -14,4 +14,5 @@ def lambda_handler(event, context):
     else:
         twilio_resp = 'Something fucked up'
     
-    return twilio_resp
+    return '<?xml version=\"1.0\" encoding=\"UTF-8\"?>'\
+           f'<Response><Message><Body>{twilio_resp}</Body></Message></Response>'
