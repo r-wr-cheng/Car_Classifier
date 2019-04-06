@@ -1,4 +1,9 @@
 import urllib3
+from PIL import Image
+import numpy as np
+import boto3
+import io
+import os
 
 def lambda_handler(event, context):
     
@@ -8,8 +13,23 @@ def lambda_handler(event, context):
 
     if num_media != '0':
         http = urllib3.PoolManager()
-        r = http.request('GET', pic_url)
-        twilio_resp = 'Picture Recieved!'
+        response = http.request('GET', pic_url)
+        
+        scaled_image = Image.open(io.BytesIO(response.data)).convert('L').resize((200,200))
+        
+        payload = ''
+        for i in np.asarray(scaled_image.convert('L')).flatten():
+            payload += f'{i},'
+        payload = payload[:-1]
+        
+        client = boto3.client('runtime.sagemaker')
+        response = client.invoke_endpoint(EndpointName=os.environ.get('SGM_ARN'),
+                                       ContentType='text/csv',
+                                       Body=payload)
+        
+        prediction = response['Body'].read().decode()
+        
+        twilio_resp = prediction
 
     else:
         twilio_resp = 'Something fucked up'
