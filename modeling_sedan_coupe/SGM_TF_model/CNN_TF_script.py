@@ -13,6 +13,9 @@ def cnn_model_fn(features, labels, mode):
     if type(features) is dict:
         features = features['input']
         
+    if mode == tf.estimator.ModeKeys.PREDICT:
+        features = features / 255.0
+        
     input_layer = tf.reshape(features, [-1, 200, 200, 1])
 
     # Convolutional Layer #1
@@ -155,7 +158,6 @@ def serving_input_receiver_fn():
         'input' : tf.placeholder(tf.float32, [None, 200, 200, 1]),
     }
     
-    inputs['input'] = tf.divide(inputs['input'], 255.0)
     return tf.estimator.export.ServingInputReceiver(inputs, inputs)
 
 if __name__ == '__main__':
@@ -196,9 +198,8 @@ if __name__ == '__main__':
         data_format = 'channels_last',
     )
     
-    config = tf.estimator.RunConfig(log_step_count_steps = 10,
-                                    save_summary_steps = 10
-                                   )
+    config = tf.estimator.RunConfig(
+        log_step_count_steps = 10, save_summary_steps = 10)
 
     # Create the Estimator
     car_classifier = tf.estimator.Estimator(
