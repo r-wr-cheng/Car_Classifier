@@ -18,7 +18,7 @@ def lambda_handler(event, context):
         scaled_image = Image.open(io.BytesIO(response.data)).convert('L').resize((200,200))
         
         payload = ''
-        for i in (np.asarray(scaled_image.convert('L')).flatten() / 255):
+        for i in np.asarray(scaled_image.convert('L')).flatten():
             payload += f'{i},'
         payload = payload[:-1]
         
