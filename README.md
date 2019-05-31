@@ -1,3 +1,3 @@
 # Car_Classifier
 Car Classifier Project
-Ryan Cheng & Prabhat Rayapati
+Ryan Cheng
